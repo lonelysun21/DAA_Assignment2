@@ -1,12 +1,16 @@
 package structures;
 
+import metrics.OperationMetrics;
+
 public class DynamicArray {
     private int[] data;
     private int size;
+    private final OperationMetrics metrics;
 
     public DynamicArray() {
         data = new int[10];
         size = 0;
+        metrics = new OperationMetrics();
     }
 
     public void add(int x) {
@@ -15,12 +19,15 @@ public class DynamicArray {
 
             for (int i = 0; i < data.length; i++) {
                 newData[i] = data[i];
+                metrics.addStep();
+                metrics.addMove();
             }
 
             data = newData;
         }
 
         data[size] = x;
+        metrics.addMove();
         size++;
     }
 
@@ -34,6 +41,8 @@ public class DynamicArray {
 
             for (int i = 0; i < data.length; i++) {
                 newData[i] = data[i];
+                metrics.addStep();
+                metrics.addMove();
             }
 
             data = newData;
@@ -41,9 +50,12 @@ public class DynamicArray {
 
         for (int i = size; i > index; i--) {
             data[i] = data[i - 1];
+            metrics.addStep();
+            metrics.addMove();
         }
 
         data[index] = x;
+        metrics.addMove();
         size++;
     }
 
@@ -53,9 +65,12 @@ public class DynamicArray {
         }
 
         int removedValue = data[index];
+        metrics.addStep();
 
         for (int i = index; i < size - 1; i++) {
             data[i] = data[i + 1];
+            metrics.addStep();
+            metrics.addMove();
         }
 
         size--;
@@ -67,11 +82,15 @@ public class DynamicArray {
             throw new IndexOutOfBoundsException();
         }
 
+        metrics.addStep();
         return data[index];
     }
 
     public boolean contains(int x) {
         for (int i = 0; i < size; i++) {
+            metrics.addStep();
+            metrics.addComparison();
+
             if (data[i] == x) {
                 return true;
             }
@@ -82,5 +101,13 @@ public class DynamicArray {
 
     public int size() {
         return size;
+    }
+
+    public OperationMetrics getMetrics() {
+        return metrics;
+    }
+
+    public void resetMetrics() {
+        metrics.reset();
     }
 }
