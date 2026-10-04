@@ -47,6 +47,45 @@ public class MinHeap {
         return data[0];
     }
 
+    public int extractMin() {
+        if (size == 0) {
+            throw new IllegalStateException();
+        }
+
+        int min = data[0];
+
+        data[0] = data[size - 1];
+        size--;
+
+        int index = 0;
+
+        while (true) {
+            int leftChild = index * 2 + 1;
+            int rightChild = index * 2 + 2;
+            int smallest = index;
+
+            if (leftChild < size && data[leftChild] < data[smallest]) {
+                smallest = leftChild;
+            }
+
+            if (rightChild < size && data[rightChild] < data[smallest]) {
+                smallest = rightChild;
+            }
+
+            if (smallest == index) {
+                break;
+            }
+
+            int temp = data[index];
+            data[index] = data[smallest];
+            data[smallest] = temp;
+
+            index = smallest;
+        }
+
+        return min;
+    }
+
     public int size() {
         return size;
     }
