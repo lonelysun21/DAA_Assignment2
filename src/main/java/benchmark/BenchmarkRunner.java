@@ -21,131 +21,150 @@ public class BenchmarkRunner {
     }
 
     private static void runW1(int n) {
-        int[] values = generateData(n);
-
-        DynamicArray array = new DynamicArray();
-        MyLinkedList list = new MyLinkedList();
-
-        for (int value : values) {
-            array.add(value);
-            list.add(value);
-        }
-
-        array.resetMetrics();
-        list.resetMetrics();
-
-        Random random = new Random(42);
-
-        long startArray = System.nanoTime();
-
-        for (int i = 0; i < 10000; i++) {
-            int index = random.nextInt(n);
-            array.get(index);
-        }
-
-        long endArray = System.nanoTime();
-
-        random = new Random(42);
-
-        long startList = System.nanoTime();
-
-        for (int i = 0; i < 10000; i++) {
-            int index = random.nextInt(n);
-            list.get(index);
-        }
-
-        long endList = System.nanoTime();
-
-        printResult(new BenchmarkResult(
-                "W1", "-", "DynamicArray", n,
-                (endArray - startArray) / 1_000_000.0,
-                array.getMetrics().getSteps(),
-                array.getMetrics().getMoves(),
-                array.getMetrics().getComparisons()
-        ));
-
-        printResult(new BenchmarkResult(
-                "W1", "-", "MyLinkedList", n,
-                (endList - startList) / 1_000_000.0,
-                list.getMetrics().getSteps(),
-                list.getMetrics().getMoves(),
-                list.getMetrics().getComparisons()
-        ));
+        runRepeated(() -> measureW1Array(n));
+        runRepeated(() -> measureW1List(n));
     }
 
     private static void runW2(int n) {
-        int[] values = generateData(n);
+        runRepeated(() -> measureW2Array(n));
+        runRepeated(() -> measureW2List(n));
+    }
 
+    private static void runW3Head(int n) {
+        runRepeated(() -> measureW3HeadArray(n));
+        runRepeated(() -> measureW3HeadList(n));
+    }
+
+    private static void runW3Middle(int n) {
+        runRepeated(() -> measureW3MiddleArray(n));
+        runRepeated(() -> measureW3MiddleList(n));
+    }
+
+    private static void runW4(int n) {
+        runRepeated(() -> measureW4Heap(n));
+    }
+
+    private static BenchmarkResult measureW1Array(int n) {
+        int[] values = generateData(n);
         DynamicArray array = new DynamicArray();
-        MyLinkedList list = new MyLinkedList();
 
         for (int value : values) {
             array.add(value);
-            list.add(value);
-        }
-
-        int[] queries = new int[1000];
-        Random random = new Random(42);
-
-        for (int i = 0; i < 500; i++) {
-            queries[i] = values[random.nextInt(n)];
-        }
-
-        for (int i = 500; i < 1000; i++) {
-            queries[i] = -1 - i;
         }
 
         array.resetMetrics();
+
+        Random random = new Random(42);
+
+        long start = System.nanoTime();
+
+        for (int i = 0; i < 10000; i++) {
+            array.get(random.nextInt(n));
+        }
+
+        long end = System.nanoTime();
+
+        return new BenchmarkResult(
+                "W1", "-", "DynamicArray", n,
+                (end - start) / 1_000_000.0,
+                array.getMetrics().getSteps(),
+                array.getMetrics().getMoves(),
+                array.getMetrics().getComparisons()
+        );
+    }
+
+    private static BenchmarkResult measureW1List(int n) {
+        int[] values = generateData(n);
+        MyLinkedList list = new MyLinkedList();
+
+        fillList(list, values);
         list.resetMetrics();
 
-        long startArray = System.nanoTime();
+        Random random = new Random(42);
+
+        long start = System.nanoTime();
+
+        for (int i = 0; i < 10000; i++) {
+            list.get(random.nextInt(n));
+        }
+
+        long end = System.nanoTime();
+
+        return new BenchmarkResult(
+                "W1", "-", "MyLinkedList", n,
+                (end - start) / 1_000_000.0,
+                list.getMetrics().getSteps(),
+                list.getMetrics().getMoves(),
+                list.getMetrics().getComparisons()
+        );
+    }
+
+    private static BenchmarkResult measureW2Array(int n) {
+        int[] values = generateData(n);
+        int[] queries = generateQueries(values);
+
+        DynamicArray array = new DynamicArray();
+
+        for (int value : values) {
+            array.add(value);
+        }
+
+        array.resetMetrics();
+
+        long start = System.nanoTime();
 
         for (int query : queries) {
             array.contains(query);
         }
 
-        long endArray = System.nanoTime();
+        long end = System.nanoTime();
 
-        long startList = System.nanoTime();
+        return new BenchmarkResult(
+                "W2", "-", "DynamicArray", n,
+                (end - start) / 1_000_000.0,
+                array.getMetrics().getSteps(),
+                array.getMetrics().getMoves(),
+                array.getMetrics().getComparisons()
+        );
+    }
+
+    private static BenchmarkResult measureW2List(int n) {
+        int[] values = generateData(n);
+        int[] queries = generateQueries(values);
+
+        MyLinkedList list = new MyLinkedList();
+
+        fillList(list, values);
+        list.resetMetrics();
+
+        long start = System.nanoTime();
 
         for (int query : queries) {
             list.contains(query);
         }
 
-        long endList = System.nanoTime();
+        long end = System.nanoTime();
 
-        printResult(new BenchmarkResult(
-                "W2", "-", "DynamicArray", n,
-                (endArray - startArray) / 1_000_000.0,
-                array.getMetrics().getSteps(),
-                array.getMetrics().getMoves(),
-                array.getMetrics().getComparisons()
-        ));
-
-        printResult(new BenchmarkResult(
+        return new BenchmarkResult(
                 "W2", "-", "MyLinkedList", n,
-                (endList - startList) / 1_000_000.0,
+                (end - start) / 1_000_000.0,
                 list.getMetrics().getSteps(),
                 list.getMetrics().getMoves(),
                 list.getMetrics().getComparisons()
-        ));
+        );
     }
 
-    private static void runW3Head(int n) {
+    private static BenchmarkResult measureW3HeadArray(int n) {
         int[] values = generateData(n);
-
         DynamicArray array = new DynamicArray();
-        MyLinkedList list = new MyLinkedList();
 
         for (int value : values) {
             array.add(value);
-            list.add(value);
         }
 
         array.resetMetrics();
-        list.resetMetrics();
 
-        long startArray = System.nanoTime();
+        long start = System.nanoTime();
 
         for (int i = 0; i < 1000; i++) {
             array.add(0, i);
@@ -155,9 +174,25 @@ public class BenchmarkRunner {
             array.remove(0);
         }
 
-        long endArray = System.nanoTime();
+        long end = System.nanoTime();
 
-        long startList = System.nanoTime();
+        return new BenchmarkResult(
+                "W3", "head", "DynamicArray", n,
+                (end - start) / 1_000_000.0,
+                array.getMetrics().getSteps(),
+                array.getMetrics().getMoves(),
+                array.getMetrics().getComparisons()
+        );
+    }
+
+    private static BenchmarkResult measureW3HeadList(int n) {
+        int[] values = generateData(n);
+        MyLinkedList list = new MyLinkedList();
+
+        fillList(list, values);
+        list.resetMetrics();
+
+        long start = System.nanoTime();
 
         for (int i = 0; i < 1000; i++) {
             list.add(0, i);
@@ -167,81 +202,81 @@ public class BenchmarkRunner {
             list.remove(0);
         }
 
-        long endList = System.nanoTime();
+        long end = System.nanoTime();
 
-        printResult(new BenchmarkResult(
-                "W3", "head", "DynamicArray", n,
-                (endArray - startArray) / 1_000_000.0,
-                array.getMetrics().getSteps(),
-                array.getMetrics().getMoves(),
-                array.getMetrics().getComparisons()
-        ));
-
-        printResult(new BenchmarkResult(
+        return new BenchmarkResult(
                 "W3", "head", "MyLinkedList", n,
-                (endList - startList) / 1_000_000.0,
+                (end - start) / 1_000_000.0,
                 list.getMetrics().getSteps(),
                 list.getMetrics().getMoves(),
                 list.getMetrics().getComparisons()
-        ));
+        );
     }
 
-    private static void runW3Middle(int n) {
+    private static BenchmarkResult measureW3MiddleArray(int n) {
         int[] values = generateData(n);
-
         DynamicArray array = new DynamicArray();
-        MyLinkedList list = new MyLinkedList();
 
         for (int value : values) {
             array.add(value);
-            list.add(value);
         }
 
         array.resetMetrics();
-        list.resetMetrics();
 
-        long startArray = System.nanoTime();
+        int middle = n / 2;
+
+        long start = System.nanoTime();
 
         for (int i = 0; i < 1000; i++) {
-            array.add(array.size() / 2, i);
+            array.add(middle, i);
         }
 
         for (int i = 0; i < 1000; i++) {
-            array.remove(array.size() / 2);
+            array.remove(middle);
         }
 
-        long endArray = System.nanoTime();
+        long end = System.nanoTime();
 
-        long startList = System.nanoTime();
-
-        for (int i = 0; i < 1000; i++) {
-            list.add(list.size() / 2, i);
-        }
-
-        for (int i = 0; i < 1000; i++) {
-            list.remove(list.size() / 2);
-        }
-
-        long endList = System.nanoTime();
-
-        printResult(new BenchmarkResult(
+        return new BenchmarkResult(
                 "W3", "middle", "DynamicArray", n,
-                (endArray - startArray) / 1_000_000.0,
+                (end - start) / 1_000_000.0,
                 array.getMetrics().getSteps(),
                 array.getMetrics().getMoves(),
                 array.getMetrics().getComparisons()
-        ));
+        );
+    }
 
-        printResult(new BenchmarkResult(
+    private static BenchmarkResult measureW3MiddleList(int n) {
+        int[] values = generateData(n);
+        MyLinkedList list = new MyLinkedList();
+
+        fillList(list, values);
+        list.resetMetrics();
+
+        int middle = n / 2;
+
+        long start = System.nanoTime();
+
+        for (int i = 0; i < 1000; i++) {
+            list.add(middle, i);
+        }
+
+        for (int i = 0; i < 1000; i++) {
+            list.remove(middle);
+        }
+
+        long end = System.nanoTime();
+
+        return new BenchmarkResult(
                 "W3", "middle", "MyLinkedList", n,
-                (endList - startList) / 1_000_000.0,
+                (end - start) / 1_000_000.0,
                 list.getMetrics().getSteps(),
                 list.getMetrics().getMoves(),
                 list.getMetrics().getComparisons()
-        ));
+        );
     }
 
-    private static void runW4(int n) {
+    private static BenchmarkResult measureW4Heap(int n) {
         int[] values = generateData(n);
         MinHeap heap = new MinHeap();
 
@@ -267,13 +302,42 @@ public class BenchmarkRunner {
 
         long end = System.nanoTime();
 
-        printResult(new BenchmarkResult(
+        return new BenchmarkResult(
                 "W4", "-", "MinHeap", n,
                 (end - start) / 1_000_000.0,
                 heap.getMetrics().getSteps(),
                 heap.getMetrics().getMoves(),
                 heap.getMetrics().getComparisons()
-        ));
+        );
+    }
+
+    private static void runRepeated(BenchmarkTask task) {
+        task.run();
+
+        BenchmarkResult[] results = new BenchmarkResult[5];
+
+        for (int i = 0; i < 5; i++) {
+            results[i] = task.run();
+        }
+
+        BenchmarkResult median = findMedian(results);
+        printResult(median);
+    }
+
+    private static BenchmarkResult findMedian(BenchmarkResult[] results) {
+        for (int i = 1; i < results.length; i++) {
+            BenchmarkResult current = results[i];
+            int j = i - 1;
+
+            while (j >= 0 && results[j].getTimeMs() > current.getTimeMs()) {
+                results[j + 1] = results[j];
+                j--;
+            }
+
+            results[j + 1] = current;
+        }
+
+        return results[results.length / 2];
     }
 
     private static int[] generateData(int n) {
@@ -287,6 +351,27 @@ public class BenchmarkRunner {
         return values;
     }
 
+    private static int[] generateQueries(int[] values) {
+        int[] queries = new int[1000];
+        Random random = new Random(42);
+
+        for (int i = 0; i < 500; i++) {
+            queries[i] = values[random.nextInt(values.length)];
+        }
+
+        for (int i = 500; i < 1000; i++) {
+            queries[i] = -1 - i;
+        }
+
+        return queries;
+    }
+
+    private static void fillList(MyLinkedList list, int[] values) {
+        for (int i = values.length - 1; i >= 0; i--) {
+            list.add(0, values[i]);
+        }
+    }
+
     private static void printResult(BenchmarkResult result) {
         System.out.println(
                 result.getWorkload() + " " +
@@ -298,5 +383,10 @@ public class BenchmarkRunner {
                         result.getMoves() + " comparisons=" +
                         result.getComparisons()
         );
+    }
+
+    @FunctionalInterface
+    private interface BenchmarkTask {
+        BenchmarkResult run();
     }
 }
