@@ -4,44 +4,35 @@ import structures.DynamicArray;
 import structures.MinHeap;
 import structures.MyLinkedList;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 
 public class BenchmarkRunner {
 
     public static void main(String[] args) {
         int[] sizes = {100, 1000, 10000, 100000};
+        BenchmarkResult[] results = new BenchmarkResult[36];
+        int index = 0;
 
         for (int n : sizes) {
-            runW1(n);
-            runW2(n);
-            runW3Head(n);
-            runW3Middle(n);
-            runW4(n);
+            results[index++] = runRepeated(() -> measureW1Array(n));
+            results[index++] = runRepeated(() -> measureW1List(n));
+
+            results[index++] = runRepeated(() -> measureW2Array(n));
+            results[index++] = runRepeated(() -> measureW2List(n));
+
+            results[index++] = runRepeated(() -> measureW3HeadArray(n));
+            results[index++] = runRepeated(() -> measureW3HeadList(n));
+
+            results[index++] = runRepeated(() -> measureW3MiddleArray(n));
+            results[index++] = runRepeated(() -> measureW3MiddleList(n));
+
+            results[index++] = runRepeated(() -> measureW4Heap(n));
         }
-    }
 
-    private static void runW1(int n) {
-        runRepeated(() -> measureW1Array(n));
-        runRepeated(() -> measureW1List(n));
-    }
-
-    private static void runW2(int n) {
-        runRepeated(() -> measureW2Array(n));
-        runRepeated(() -> measureW2List(n));
-    }
-
-    private static void runW3Head(int n) {
-        runRepeated(() -> measureW3HeadArray(n));
-        runRepeated(() -> measureW3HeadList(n));
-    }
-
-    private static void runW3Middle(int n) {
-        runRepeated(() -> measureW3MiddleArray(n));
-        runRepeated(() -> measureW3MiddleList(n));
-    }
-
-    private static void runW4(int n) {
-        runRepeated(() -> measureW4Heap(n));
+        writeCsv(results);
     }
 
     private static BenchmarkResult measureW1Array(int n) {
@@ -311,7 +302,7 @@ public class BenchmarkRunner {
         );
     }
 
-    private static void runRepeated(BenchmarkTask task) {
+    private static BenchmarkResult runRepeated(BenchmarkTask task) {
         task.run();
 
         BenchmarkResult[] results = new BenchmarkResult[5];
@@ -322,6 +313,8 @@ public class BenchmarkRunner {
 
         BenchmarkResult median = findMedian(results);
         printResult(median);
+
+        return median;
     }
 
     private static BenchmarkResult findMedian(BenchmarkResult[] results) {
@@ -369,6 +362,27 @@ public class BenchmarkRunner {
     private static void fillList(MyLinkedList list, int[] values) {
         for (int i = values.length - 1; i >= 0; i--) {
             list.add(0, values[i]);
+        }
+    }
+
+    private static void writeCsv(BenchmarkResult[] results) {
+        File directory = new File("results");
+
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File file = new File(directory, "results.csv");
+
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write("workload,variant,structure,n,time_ms,steps,moves,comparisons\n");
+
+            for (BenchmarkResult result : results) {
+                writer.write(result.toCsvRow());
+                writer.write("\n");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

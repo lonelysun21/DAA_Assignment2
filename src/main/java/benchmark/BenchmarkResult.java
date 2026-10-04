@@ -53,4 +53,15 @@ public class BenchmarkResult {
     public long getComparisons() {
         return comparisons;
     }
+
+    public String toCsvRow() {
+        return workload + "," +
+                variant + "," +
+                structure + "," +
+                n + "," +
+                timeMs + "," +
+                steps + "," +
+                moves + "," +
+                comparisons;
+    }
 }
